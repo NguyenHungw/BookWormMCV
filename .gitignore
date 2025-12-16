@@ -1,0 +1,11 @@
+# Ignore appsettings (chứa thông tin nhạy cảm)
+appsettings.json
+appsettings.*.json
+
+# Nếu chỉ muốn ignore file môi trường (khuyến nghị)
+# appsettings.Development.json
+# appsettings.Staging.json
+# appsettings.Production.json
+# Firebase / Google service account
+firebase-service-account.json
+**/firebase-service-account.json

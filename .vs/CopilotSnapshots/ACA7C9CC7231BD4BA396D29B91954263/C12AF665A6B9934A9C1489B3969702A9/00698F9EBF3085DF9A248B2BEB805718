@@ -1,0 +1,73 @@
+﻿using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
+using Microsoft.AspNetCore.Builder.Extensions;
+using Microsoft.Extensions.Logging;
+using System;
+using System.IO;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllersWithViews();
+// cau hinh firebase
+
+var app = builder.Build();
+
+// Attempt Firebase initialization after building the app so we can use app.Logger
+try
+{
+    var credPath = builder.Configuration["Firebase:CredentialPath"];
+    if (!string.IsNullOrWhiteSpace(credPath))
+    {
+        if (File.Exists(credPath))
+        {
+            // Only create Firebase app if none exists
+            if (FirebaseApp.DefaultInstance == null)
+            {
+                FirebaseApp.Create(new AppOptions
+                {
+                    Credential = GoogleCredential.FromFile(credPath)
+                });
+                app.Logger.LogInformation("Firebase initialized using credential at {path}", credPath);
+            }
+            else
+            {
+                app.Logger.LogInformation("Firebase DefaultInstance already exists");
+            }
+        }
+        else
+        {
+            app.Logger.LogWarning("Firebase credential file not found: {path}. Skipping Firebase initialization.", credPath);
+        }
+    }
+    else
+    {
+        app.Logger.LogWarning("Firebase:CredentialPath not configured. Skipping Firebase initialization.");
+    }
+}
+catch (Exception ex)
+{
+    // Log and continue so the web server can still start even if Firebase fails to initialize
+    app.Logger.LogError(ex, "Failed to initialize Firebase. The application will continue without Firebase.");
+}
+
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.Run();
